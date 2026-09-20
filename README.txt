@@ -1,5 +1,5 @@
 QUICK START
-================================================================================
+============================================================
 
 STEP 1: Install dependencies
     $ pip install opencv-python pyzbar numpy
@@ -20,8 +20,8 @@ STEP 3: Integrate with mission
     mission.run_mission()
 
 
-DEBUGGING:
-================================================================================
+DEBUGGING
+============================================================
 
 "FPS too slow (< 2 FPS)"
     → Check: Is YOLO somehow loaded? (it shouldn't be)
@@ -39,7 +39,7 @@ DEBUGGING:
 
 
 MISSION INTEGRATION:
-================================================================================
+============================================================
 
 See qr_integration_example.py for full code. Quick flow:
 
