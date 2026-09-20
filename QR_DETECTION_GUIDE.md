@@ -1,4 +1,4 @@
-# Aerothon 2026 - QR Detection Pipeline (FINAL)
+# QR Detection Pipeline
 
 ## How to Use
 
@@ -29,76 +29,6 @@ for frame_num, result, fps in pipeline.process_frame_stream(
 ):
     pass
 ```
-
----
-
-## Architecture: Two-Stage Detection
-
-```
-┌─ FRAME RECEIVED ─┐
-│  (10m altitude)  │
-└──────────┬────────┘
-           │
-    ┌──────▼──────┐
-    │   STAGE 1   │
-    │   Direct    │  ← Fast: pyzbar on original frame (150-300ms)
-    │   Decode    │
-    │   (pyzbar)  │
-    └──────┬──────┘
-           │
-      ┌────▼────┐
-      │ Success? │
-      └────┬────┘
-           │
-        YES│              NO
-           │               │
-        [✓]           ┌─────▼──────────┐
-        STOP          │  Check Miss    │
-                      │  Counter       │
-                      └─────┬──────────┘
-                            │
-                    ┌───────▼────────┐
-                    │ Consecutive    │
-                    │ Misses >= 5?   │
-                    └───────┬────────┘
-                            │
-                         YES│    NO
-                            │     └──→ [✗] Return None
-                            │
-                      ┌─────▼──────────┐
-                      │   STAGE 2      │
-                      │  Enhanced      │  ← Smart: CLAHE + sharpening only when needed
-                      │  Preprocess    │     (100-200ms)
-                      │  + Decode      │
-                      └─────┬──────────┘
-                            │
-                      ┌─────▼────────┐
-                      │  Success?    │
-                      └─────┬────────┘
-                            │
-                         YES│    NO
-                           [✓]   [✗]
-                           STOP  Return None
-```
-
----
-
-## Performance Specs (Raspberry Pi 5)
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| **Frame Processing (Stage 1)** | 150-300 ms | pyzbar only, direct decode |
-| **Frame Processing (Stage 2)** | 100-200 ms | CLAHE + sharpening |
-| **FPS Achieved** | 3-6 FPS | More than enough for 10m hover |
-| **Memory** | ~180 MB | No YOLO loaded |
-| **CPU** | ~60-80% | On 4-core Pi 5 |
-| **Thermal** | Stable | Stays cool on Pi |
-
-**Real-world flight test:**
-- Altitude: 10m
-- QR Size: ~15cm × 15cm
-- Detection Rate: 95%+ (first attempt), 98%+ (with enhancement)
-- Time to Detection: 2-3 frames (avg)
 
 ---
 
