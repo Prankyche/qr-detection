@@ -1,0 +1,12 @@
+# Install: pip install -r requirements.txt
+
+opencv-python==4.8.1.78
+numpy==1.24.3
+
+pyzbar==0.1.9
+
+dronekit==2.9.2
+dronekit-sitl==3.8.0
+pymavlink==2.4.41
+
+psutil==5.9.5
