@@ -1,12 +1,20 @@
-# Install: pip install -r requirements.txt
+# AeroTHON QR detection + SITL  -  Windows, Python 3.10
+# Install:  pip install -r requirements.txt
+# (On the Raspberry Pi use setup_pi.sh instead: OpenCV/NumPy come from apt there.)
 
+# --- QR detector (the only block the Pi needs) ---
 opencv-python==4.8.1.78
 numpy==1.24.3
-
 pyzbar==0.1.9
 
+# --- SITL / navigation scripts ---
 dronekit==2.9.2
-dronekit-sitl==3.8.0
+dronekit-sitl==3.3.0
 pymavlink==2.4.41
 
-psutil==5.9.5
+# --- flight-path plot ---
+matplotlib==3.7.5
+
+# --- only for test_qr.py (builds synthetic QR images) ---
+qrcode==7.4.2
+pillow==10.4.0

@@ -42,17 +42,14 @@ class QRDetectionPipeline_Pi_Optimized:
         try:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
             
-            # CLAHE: Boost local contrast (critical for small QR at distance)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
             enhanced = clahe.apply(gray)
             
-            # Light sharpening (not heavy blur reversal)
             kernel = np.array([[-1, -1, -1],
                               [-1,  9, -1],
                               [-1, -1, -1]]) / 1.0
             sharpened = cv2.filter2D(enhanced, -1, kernel)
             
-            # Decode enhanced
             results = decode(sharpened)
             if results:
                 qr_data = results[0]
@@ -70,17 +67,8 @@ class QRDetectionPipeline_Pi_Optimized:
         return None
     
     def detect_and_decode(self, image: np.ndarray, force_enhanced: bool = False) -> Optional[Dict]:
-        """
-        Two-stage detection for 10m altitude.
-        
-        Stage 1: Fast direct decode (pyzbar on original)
-        Stage 2: Enhanced (CLAHE + sharpening) if direct fails
-        
-        Adaptive: After N consecutive misses, always try enhanced.
-        """
         self.frame_count += 1
         
-        # Stage 1: Direct (fast path)
         result = self.direct_decode(image)
         if result:
             self.consecutive_misses = 0
@@ -89,7 +77,6 @@ class QRDetectionPipeline_Pi_Optimized:
         
         self.consecutive_misses += 1
         
-        # Stage 2: Enhanced (only if direct failed AND adaptive threshold met)
         if force_enhanced or self.consecutive_misses >= self.max_misses_before_preprocess:
             result = self.enhanced_decode(image)
             if result:
@@ -101,17 +88,6 @@ class QRDetectionPipeline_Pi_Optimized:
     
     def process_frame_stream(self, frame_generator, max_frames: int = None, 
                             callback_on_detect=None):
-        """
-        Process continuous frame stream (from camera or video).
-        Tracks FPS and detection metrics.
-        
-        Args:
-            frame_generator: Iterable yielding frames
-            max_frames: Stop after N frames (None = infinite)
-            callback_on_detect: Function called on successful detection
-        
-        Yields: (frame_number, result, fps)
-        """
         start_time = time.time()
         frame_num = 0
         last_fps_calc = start_time
@@ -123,14 +99,11 @@ class QRDetectionPipeline_Pi_Optimized:
             
             frame_num += 1
             
-            # Detect
             result = self.detect_and_decode(frame)
             
-            # Callback on detection
             if result and callback_on_detect:
                 callback_on_detect(frame_num, result)
             
-            # Calculate FPS every 30 frames
             if frame_num % 30 == 0:
                 elapsed = time.time() - last_fps_calc
                 fps = 30 / elapsed if elapsed > 0 else 0
@@ -140,7 +113,6 @@ class QRDetectionPipeline_Pi_Optimized:
 
 
 def camera_frame_generator(camera_id=0, resize_width=None):
-    """Generator that yields frames from camera."""
     cap = cv2.VideoCapture(camera_id)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open camera {camera_id}")
@@ -160,7 +132,6 @@ def camera_frame_generator(camera_id=0, resize_width=None):
 
 
 def video_frame_generator(video_path, resize_width=None, skip_frames=1):
-    """Generator that yields frames from video file."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video {video_path}")
